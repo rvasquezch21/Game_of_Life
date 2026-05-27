@@ -47,7 +47,7 @@ vectorizadas, sin añadir complejidad adicional.
 
 ### Uso de memoria por grilla
 
-La grilla se almacena como un array NumPy de tipo `uint8` (1 byte por celda).
+La grilla se almacena como un array NumPy.
 El uso de memoria es estrictamente **O(n)** y se puede calcular directamente:
 
 | Grilla       | Celdas      | Memoria (MB) |
@@ -80,7 +80,7 @@ los 2 GB, lo que constituye una limitación práctica importante.
 ### 4.1 Asignación de memoria en cada paso
 
 El cuello de botella más significativo de la implementación es que **en cada generación
-se crean dos nuevos arrays de NumPy** (`survive` y `born`), además del array de vecinos
+se crean dos nuevos arrays de NumPy**, además del array de vecinos
 de `convolve2d`. Esto implica que el recolector de basura de Python debe liberar y
 reasignar memoria en cada iteración, lo que genera presión sobre el heap y puede
 causar pausas de GC (Garbage Collection) no deterministas en simulaciones largas.
@@ -90,15 +90,15 @@ del loop y escribir in-place, evitando nuevas asignaciones.
 
 ### 4.2 Overhead de `convolve2d` para grillas pequeñas
 
-Para grillas pequeñas (32×32, 64×64), el overhead de llamar a `convolve2d` — que
+Para grillas pequeñas, el overhead de llamar a `convolve2d` — que
 internamente valida parámetros, decide si usar FFT o correlación directa, y maneja
 condiciones de borde — representa una fracción importante del tiempo total. Esto
 explica por qué los tiempos para grillas pequeñas no escalan perfectamente desde cero.
 
 ### 4.3 Conversión de tipos
 
-Las reglas de Conway producen arrays booleanos (`survive | born`), que luego se
-convierten a `uint8` con `.astype(np.uint8)`. Esta conversión es O(n) pero implica
+Las reglas de Conway producen arrays booleanos, que luego se
+convierten. Esta conversión es O(n) pero implica
 una pasada adicional sobre todos los datos. Se podría eliminar usando directamente
 `np.uint8(survive | born)` o trabajando con `view`.
 
@@ -140,7 +140,7 @@ evaluados, ya que log(n) crece muy lentamente (log₂(1,048,576) ≈ 20).
 
 2. **El escalamiento en memoria es lineal (O(n))** y manejable hasta grillas de
    aproximadamente 8,192×8,192 en hardware moderno con 8 GB de RAM. Más allá de eso,
-   se requeriría procesamiento por bloques (*tiling*).
+   se requeriría procesamiento por bloques.
 
 3. **El principal cuello de botella no es el algoritmo sino la asignación de memoria**
    repetida en cada generación. Usar buffers pre-asignados podría reducir el tiempo
