@@ -2,14 +2,6 @@
 main.py
 -------
 Punto de entrada principal del proyecto.
-
-Uso:
-    python main.py --mode [demo | benchmark | all]
-
-Opciones:
-    demo      → genera GIFs de patrones clásicos + aleatorio
-    benchmark → corre el benchmark y guarda las gráficas
-    all       → ejecuta ambos (por defecto)
 """
 
 import argparse

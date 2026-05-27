@@ -1,16 +1,3 @@
-"""
-benchmark.py
-------------
-Medición empírica del rendimiento del Juego de la Vida.
-
-Qué hace:
-  1. Ejecuta la simulación para grillas de distintos tamaños.
-  2. Mide el tiempo promedio por iteración.
-  3. Grafica tiempo vs número de celdas (escala lineal y log-log).
-  4. Superpone curvas teóricas de complejidad para comparar.
-  5. Guarda las gráficas en outputs/plots/.
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -20,19 +7,19 @@ import time
 from game_of_life import GameOfLife, benchmark_step
 
 
-# ── Configuración del experimento ─────────────────────────────────────────────
+# Configuración del experimento 
 
-# Tamaños de grilla a evaluar (lado N → N² celdas)
+# Tamaños de grilla a evaluar 
 GRID_SIZES = [32, 64, 128, 256, 512, 1024]
 
-# Pasos por medición (más pasos → promedio más estable)
+# Pasos por medición 
 N_STEPS = 30
 
 # Repeticiones para estimar varianza
 N_REPS = 3
 
 
-# ── Ejecución del benchmark ───────────────────────────────────────────────────
+# Ejecución del benchmark
 
 def run_benchmark(sizes=GRID_SIZES, n_steps=N_STEPS, n_reps=N_REPS):
     """
@@ -68,15 +55,12 @@ def run_benchmark(sizes=GRID_SIZES, n_steps=N_STEPS, n_reps=N_REPS):
     return cell_counts, mean_times, std_times
 
 
-# ── Curvas teóricas de referencia ─────────────────────────────────────────────
-
 def _fit_curves(cell_counts, mean_times):
     """
     Genera curvas O(n), O(n log n) y O(n²) escaladas al primer punto medido.
     Esto permite comparar visualmente la pendiente sin conocer la constante.
     """
     n = cell_counts
-    # Factor de escala: igualamos cada curva al primer punto medido
     c_linear  = mean_times[0] / n[0]
     c_nlogn   = mean_times[0] / (n[0] * np.log(n[0]))
     c_n2      = mean_times[0] / (n[0] ** 2)
@@ -88,7 +72,7 @@ def _fit_curves(cell_counts, mean_times):
     }
 
 
-# ── Graficación ───────────────────────────────────────────────────────────────
+# Graficación 
 
 STYLE = {
     "measured" : dict(color="#00d4ff", marker="o", linewidth=2,
@@ -122,11 +106,9 @@ def plot_linear(cell_counts, mean_times, std_times, curves, save_path=None):
     """Gráfica en escala lineal con barras de error y curvas teóricas."""
     fig, ax = plt.subplots(figsize=(8, 5))
 
-    # Curvas teóricas
     for name, y in curves.items():
         ax.plot(cell_counts, y, **STYLE[name])
 
-    # Datos medidos con barras de error (±1σ)
     ax.errorbar(cell_counts, mean_times,
                 yerr=std_times,
                 **STYLE["measured"])
@@ -152,12 +134,7 @@ def plot_linear(cell_counts, mean_times, std_times, curves, save_path=None):
 
 
 def plot_loglog(cell_counts, mean_times, std_times, curves, save_path=None):
-    """
-    Gráfica log-log.
-
-    En escala log-log una función O(nᵏ) aparece como una línea recta con
-    pendiente k, lo que hace muy fácil identificar el orden de complejidad.
-    """
+ 
     fig, ax = plt.subplots(figsize=(8, 5))
 
     for name, y in curves.items():
@@ -174,7 +151,7 @@ def plot_loglog(cell_counts, mean_times, std_times, curves, save_path=None):
         ylabel="Tiempo promedio por paso (s)  [log]"
     )
 
-    # Anotar pendiente empírica
+    # Anotamos la pendiente empírica
     if len(cell_counts) >= 2:
         log_x = np.log10(cell_counts)
         log_y = np.log10(mean_times)
@@ -198,11 +175,6 @@ def plot_loglog(cell_counts, mean_times, std_times, curves, save_path=None):
 
 
 def plot_alive_cells(sizes=None, save_path=None):
-    """
-    Gráfica auxiliar: evolución del número de celdas vivas a lo largo
-    de 200 generaciones para una grilla 64×64 aleatoria.
-    Muestra cómo el sistema llega a un estado de equilibrio.
-    """
     if sizes is None:
         sizes = [64]
 
@@ -236,7 +208,7 @@ def plot_alive_cells(sizes=None, save_path=None):
         plt.show()
 
 
-# ── Función principal ─────────────────────────────────────────────────────────
+# Función principal 
 
 def main(output_dir="outputs/plots"):
     os.makedirs(output_dir, exist_ok=True)
@@ -245,13 +217,10 @@ def main(output_dir="outputs/plots"):
     print("  Benchmark — Juego de la Vida de Conway")
     print("=" * 48)
 
-    # 1. Correr el benchmark
     cell_counts, mean_times, std_times = run_benchmark()
 
-    # 2. Calcular curvas teóricas
     curves = _fit_curves(cell_counts, mean_times)
 
-    # 3. Graficar
     print("\nGenerando gráficas ...")
     plot_linear(cell_counts, mean_times, std_times, curves,
                 save_path=os.path.join(output_dir, "benchmark_linear.png"))
@@ -260,7 +229,6 @@ def main(output_dir="outputs/plots"):
     plot_alive_cells([32, 64, 128],
                      save_path=os.path.join(output_dir, "alive_cells_evolution.png"))
 
-    # 4. Resumen de análisis
     log_x  = np.log10(cell_counts)
     log_y  = np.log10(mean_times)
     slope  = np.polyfit(log_x, log_y, 1)[0]

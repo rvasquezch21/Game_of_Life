@@ -1,16 +1,3 @@
-"""
-game_of_life.py
----------------
-Implementación orientada a objetos del Juego de la Vida de Conway.
-
-Estrategia de rendimiento:
-  - Se usa NumPy para vectorizar el cómputo de vecinos, evitando
-    bucles explícitos en Python (que son lentos).
-  - scipy.signal.convolve2d aplica un "kernel" 3x3 de unos sobre
-    la grilla para contar vecinos vivos de todas las celdas a la vez.
-  - Con boundary='wrap' el tablero es toroidal (los bordes se conectan).
-"""
-
 import numpy as np
 from scipy.signal import convolve2d
 import time
@@ -25,8 +12,7 @@ NEIGHBOR_KERNEL = np.array([
 ], dtype=np.uint8)
 
 
-# ── Patrones clásicos ──────────────────────────────────────────────────────────
-# Cada patrón es una lista de (fila, col) de celdas vivas relativas al origen.
+# Patrones clásicos 
 
 PATTERNS = {
     "glider": [
@@ -52,7 +38,6 @@ PATTERNS = {
         (3, 2), (3, 3),
     ],
     "pulsar": [
-        # Patrón período-3 grande; se define con coordenadas relativas al centro
         (0,2),(0,3),(0,4),(0,8),(0,9),(0,10),
         (2,0),(2,5),(2,7),(2,12),
         (3,0),(3,5),(3,7),(3,12),
@@ -68,59 +53,31 @@ PATTERNS = {
 
 
 class GameOfLife:
-    """
-    Autómata celular del Juego de la Vida de Conway.
-
-    Parámetros
-    ----------
-    rows : int
-        Número de filas de la grilla.
-    cols : int
-        Número de columnas de la grilla.
-    initial_state : np.ndarray o None
-        Matriz booleana/int de shape (rows, cols). Si es None se genera
-        un estado aleatorio con ~30 % de celdas vivas.
-    """
 
     def __init__(self, rows: int, cols: int, initial_state=None):
         self.rows = rows
         self.cols = cols
-        self.generation = 0          # contador de generaciones
+        self.generation = 0       
 
         if initial_state is not None:
-            # Aseguramos que sea uint8 (0 ó 1) sin importar el dtype de entrada
             self.grid = np.array(initial_state, dtype=np.uint8)
             assert self.grid.shape == (rows, cols), (
                 f"initial_state debe tener forma ({rows}, {cols}), "
                 f"pero tiene {self.grid.shape}"
             )
         else:
-            # Estado aleatorio: ~30 % de probabilidad de celda viva
             rng = np.random.default_rng()
             self.grid = rng.choice(
                 [0, 1], size=(rows, cols), p=[0.7, 0.3]
             ).astype(np.uint8)
 
-    # ── Métodos públicos requeridos ────────────────────────────────────────────
+    # Métodos públicos requeridos
 
     def step(self) -> None:
-        """
-        Avanza una generación aplicando las 4 reglas de Conway.
 
-        Algoritmo:
-          1. Convolucionar la grilla con NEIGHBOR_KERNEL → matriz de vecinos vivos.
-          2. Calcular la nueva grilla con operaciones vectorizadas de NumPy:
-             - Celda viva con 2 ó 3 vecinos → sobrevive.
-             - Celda muerta con exactamente 3 vecinos → nace.
-             - Cualquier otro caso → muere / permanece muerta.
-        """
-        # Paso 1: contar vecinos de todas las celdas simultáneamente
-        # boundary='wrap' hace que el tablero sea toroidal
         neighbors = convolve2d(self.grid, NEIGHBOR_KERNEL,
                                mode='same', boundary='wrap')
 
-        # Paso 2: aplicar reglas de forma vectorizada
-        # alive[i,j] = 1 si la celda (i,j) estará viva en la siguiente gen.
         survive = (self.grid == 1) & ((neighbors == 2) | (neighbors == 3))
         born    = (self.grid == 0) & (neighbors == 3)
 
@@ -128,40 +85,16 @@ class GameOfLife:
         self.generation += 1
 
     def run(self, steps: int) -> None:
-        """
-        Ejecuta `steps` generaciones consecutivas.
-
-        Parámetros
-        ----------
-        steps : int
-            Número de iteraciones a realizar.
-        """
+ 
         for _ in range(steps):
             self.step()
 
     def get_state(self) -> np.ndarray:
-        """
-        Devuelve una copia del estado actual de la grilla.
-
-        Returns
-        -------
-        np.ndarray de dtype uint8 con shape (rows, cols).
-        """
         return self.grid.copy()
 
     def set_pattern(self, pattern_name: str,
                     offset_row: int = 0, offset_col: int = 0) -> None:
-        """
-        Coloca un patrón clásico en la grilla (sobre fondo vacío).
 
-        Parámetros
-        ----------
-        pattern_name : str
-            Nombre del patrón ('glider', 'blinker', 'toad', 'block',
-            'beacon', 'pulsar').
-        offset_row, offset_col : int
-            Desplazamiento desde la esquina superior izquierda.
-        """
         if pattern_name not in PATTERNS:
             raise ValueError(
                 f"Patrón '{pattern_name}' no reconocido. "
@@ -180,23 +113,11 @@ class GameOfLife:
         return int(self.grid.sum())
 
 
-# ── Utilidad de benchmark ──────────────────────────────────────────────────────
+# Utilidad de benchmark 
 
 def benchmark_step(size: int, n_steps: int = 20) -> float:
-    """
-    Mide el tiempo promedio por iteración para una grilla de `size x size`.
 
-    Parámetros
-    ----------
-    size    : int   — lado de la grilla cuadrada.
-    n_steps : int   — número de pasos a promediar.
-
-    Returns
-    -------
-    float — tiempo promedio en segundos por paso.
-    """
-    game = GameOfLife(size, size)          # estado aleatorio
-    # Calentamiento (evita que la primera llamada sea más lenta por caché/JIT)
+    game = GameOfLife(size, size)      
     game.step()
     start = time.perf_counter()
     game.run(n_steps)

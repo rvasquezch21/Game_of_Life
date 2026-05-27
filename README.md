@@ -32,26 +32,6 @@ game_of_life/
     └── plots/        # Gráficas de rendimiento
 ```
 
----
-
-## Instalación
-
-```bash
-# Clonar el repositorio
-git clone https://github.com/<tu-usuario>/game_of_life.git
-cd game_of_life
-
-# Crear entorno virtual (recomendado)
-python -m venv venv
-source venv/bin/activate        # Linux/macOS
-venv\Scripts\activate           # Windows
-
-# Instalar dependencias
-pip install -r requirements.txt
-```
-
----
-
 ## Ejecución
 
 ### Todo (visualizaciones + benchmark)
@@ -132,13 +112,3 @@ Ver gráficas en `outputs/plots/`.
 - **`dtype=uint8`:** Ocupa 1 byte por celda (vs 8 bytes con float64), reduciendo el uso
   de memoria en 8×.
 
----
-
-## Dependencias
-
-```
-numpy
-scipy
-matplotlib
-pillow
-```
